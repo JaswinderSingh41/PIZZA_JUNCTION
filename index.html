@@ -1,0 +1,925 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pizza Junction</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- jsPDF CDN for generating PDF invoices -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8; /* A light, clean background */
+        }
+        .bestseller-badge {
+            position: absolute;
+            top: -0.5rem;
+            right: -0.5rem;
+            background-color: #f59e0b;
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        /* Modal styling */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: none; /* Hidden by default */
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background-color: #ffffff;
+            padding: 2.5rem;
+            border-radius: 1.5rem;
+            width: 90%;
+            max-width: 550px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2), 0 4px 6px -2px rgba(0, 0, 0, 0.1);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            max-height: 90vh; /* Ensure modal fits on screen */
+        }
+        .modal-close {
+            position: absolute;
+            top: 1rem;
+            right: 1.5rem;
+            cursor: pointer;
+            font-size: 2rem;
+            line-height: 1;
+            color: #4a5568;
+            font-weight: 300;
+        }
+        .order-detail-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 0;
+        }
+        .scroll-smooth {
+            scroll-behavior: smooth;
+        }
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none; /* IE and Edge */
+            scrollbar-width: none; /* Firefox */
+        }
+        /* Mobile-specific adjustments for the sidebar */
+        @media (max-width: 1023px) {
+            .mobile-fix {
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                width: 100%;
+                z-index: 50;
+                border-top-left-radius: 2rem;
+                border-top-right-radius: 2rem;
+                padding: 1.5rem;
+                box-shadow: 0 -4px 6px -1px rgba(0, 0, 0, 0.1), 0 -2px 4px -1px rgba(0, 0, 0, 0.06);
+            }
+            .content-spacing {
+                padding-bottom: 12rem; /* Add padding to prevent content from being hidden behind the fixed bar */
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex flex-col lg:flex-row items-start justify-center min-h-screen p-4 scroll-smooth">
+
+    <div class="container mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8 max-w-7xl content-spacing">
+
+        <!-- Main Content (Menu) -->
+        <div class="lg:col-span-2">
+            <header class="bg-white rounded-3xl shadow-xl p-8 mb-8 text-center border-t-8 border-yellow-500">
+                <h1 class="text-5xl font-extrabold text-gray-900 leading-tight">Pizza Junction</h1>
+                <p class="mt-2 text-xl font-medium text-gray-600">“Crafted with Passion. Served with Pride.”</p>
+                <div class="mt-6 flex flex-col sm:flex-row justify-center items-center space-y-2 sm:space-y-0 sm:space-x-6 text-gray-500 font-semibold text-sm sm:text-base">
+                    <p class="flex items-center"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-blue-500" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clip-rule="evenodd" />
+                    </svg>DINE-IN: 4:00 PM - 10:30 PM</p>
+                    <p class="flex items-center"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-green-500" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M7 2a2 2 0 00-2 2v12a2 2 0 002 2h6a2 2 0 002-2V4a2 2 0 00-2-2H7zm3 1a1 1 0 100 2 1 1 0 000-2z" clip-rule="evenodd" />
+                    </svg>DELIVERY: ALL DAY</p>
+                    <p class="flex items-center"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-gray-500" viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.741 4.451a1 1 0 01-.54 1.06l-1.548.774a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.451.741a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
+                    </svg>7888412267</p>
+                </div>
+            </header>
+
+            <main class="space-y-12" id="menu-container">
+                <!-- Menu categories will be dynamically added here -->
+            </main>
+        </div>
+
+        <!-- Sidebar (Cart) -->
+        <div class="bg-white rounded-3xl shadow-xl p-3 lg:sticky lg:top-8 lg:h-fit mobile-fix">
+            <h2 class="text-2xl font-bold text-gray-900 mb-4">Your Cart</h2>
+            
+            <!-- This is the new scrollable container for the cart items -->
+            <div class="max-h-[10rem] lg:max-h-16 overflow-y-auto no-scrollbar pr-2">
+                <div id="cart-items" class="space-y-2">
+                    <!-- Cart items will be dynamically added here -->
+                </div>
+            </div>
+
+            <!-- The total and checkout button are now outside the scrollable area -->
+            <div class="mt-4 pt-3 border-t border-gray-200">
+                <div class="flex justify-between font-bold text-gray-900 text-xl">
+                    <span>Total:</span>
+                    <span id="cart-total">₹0.00</span>
+                </div>
+            </div>
+            <button id="checkout-btn" class="w-full mt-4 bg-yellow-500 text-white py-3 rounded-xl font-bold text-lg hover:bg-yellow-600 transition-colors shadow-lg">
+                Proceed to Checkout
+            </button>
+        </div>
+
+    </div>
+
+    <!-- The Checkout Modal -->
+    <div id="checkout-modal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close" id="close-modal-btn">&times;</span>
+            <h6 class="text-3xl font-bold text-gray-900 mb-6 text-center">PIZZA JUNCTION</h6>
+
+            <div id="option-selection" class="space-y-4">
+                <button id="dine-in-btn" class="w-full bg-blue-500 text-white py-4 rounded-xl font-semibold hover:bg-blue-600 transition-colors shadow-lg">
+                    DINE-IN
+                </button>
+                <button id="delivery-btn" class="w-full bg-green-500 text-white py-4 rounded-xl font-semibold hover:bg-green-600 transition-colors shadow-lg">
+                    DELIVERY
+                </button>
+            </div>
+
+            <!-- New responsive order summary with scrollable list and fixed button -->
+            <div id="order-summary" class="hidden flex flex-col flex-grow">
+                <h3 class="text-2xl font-semibold text-gray-900 mb-4">Order Summary</h3>
+                <p class="text-sm text-gray-500 mb-4 font-semibold" id="order-type-display"></p>
+                
+                <div class="overflow-y-auto no-scrollbar pr-2 mb-4 max-h-[250px]">
+                    <div id="summary-items" class="space-y-2">
+                        <!-- Order items will be displayed here -->
+                    </div>
+                </div>
+                
+                <!-- This section is now permanently fixed at the bottom of the modal -->
+                <div class="pt-4 border-t border-gray-200 mt-auto">
+                    <div id="summary-details">
+                        <!-- Dynamic details like delivery charges or discounts will be here -->
+                    </div>
+                    <div class="flex justify-between font-bold text-gray-900 text-xl border-t pt-4">
+                        <span>Final Total:</span>
+                        <span id="summary-total">₹0.00</span>
+                    </div>
+                    <button id="submit-order-btn" class="w-full mt-4 bg-yellow-500 text-white py-4 rounded-xl font-semibold hover:bg-yellow-600 transition-colors shadow-lg">
+                        Submit Order
+                    </button>
+                </div>
+            </div>
+
+            <div id="confirmation-prompt" class="hidden text-center mt-4">
+                <p class="text-lg font-semibold text-gray-900">Confirm and submit your order?</p>
+                <div class="mt-6 flex justify-center space-x-4">
+                    <button id="confirm-yes-btn" class="bg-green-500 text-white py-3 px-8 rounded-xl font-semibold hover:bg-green-600 shadow-md">Yes, submit</button>
+                    <button id="confirm-no-btn" class="bg-gray-300 text-gray-800 py-3 px-8 rounded-xl font-semibold hover:bg-gray-400 shadow-md">No, go back</button>
+                </div>
+            </div>
+
+            <div id="success-message" class="hidden text-center mt-4">
+                <p class="text-xl font-bold text-green-600">Order submitted successfully!</p>
+                <p class="mt-2 text-gray-700">Thank you! Please share invoice pdf with us on whatsapp for furthur processing.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const { jsPDF } = window.jspdf;
+
+        const menuItems = {
+            'Burgers': [
+                { id: 'burger1', name: 'CLASSIC ALOO TIKKI BUN', price: 39, description: 'A crispy potato patty with fresh onions, and our signature sauce, all in a soft bun.' },
+                { id: 'burger2', name: 'FARM FRESH TIKKI BUN', price: 49, description: 'Classic aloo tikki with a medley of fresh vegies, creating a crunchy, wholesome bite.' },
+                { id: 'burger3', name: 'TANDOORI ACHARI BUN', price: 49, description: 'A smoky, marinated paneer patty with a pickle-flavoured sauce for a zesty twist.', bestseller: true },
+                { id: 'burger4', name: 'SPL. CHEESE BUN', price: 59, description: 'A gooey, melted cheese patty with fresh veggies, a dream for any cheese lover.' },
+                { id: 'burger5', name: 'SPICY PERI PERI BUN', price: 59, description: 'A tangy paneer bursting like snowfall on beloved Maggi.' },
+                { id: 'burger6', name: 'SPICY CHEESE PANEER BUN', price: 69, description: 'Spicy paneer and cheese patty in a soft bun.' },
+                { id: 'burger7', name: 'MAKHNI PANEER BUN', price: 69, description: 'Creamy makhni gravy with a paneer patty.' },
+                { id: 'burger8', name: 'SPL CRISPY PANEER BUN', price: 89, description: 'Extra crispy paneer patty in a bun.' },
+                { id: 'burger9', name: 'DOUBLE DECKER BUN', price: 79, description: 'Double patties and fillings for a big appetite.' },
+                { id: 'burger10', name: 'PIZZA JUNCTION SPL BUN', price: 89, description: 'Our special burger with unique flavors.' },
+                { id: 'burger11', name: 'MAHARAJA BURGER', price: 139, description: 'King-sized burger fit for a maharaja.', bestseller: true },
+                { id: 'burger12', name: 'CHEESE SLICE BURGER', price: 69, description: 'Burger with a slice of melted cheese.' },
+            ],
+            'Sandwiches': [
+                { id: 'sandwich1', name: 'VEG CORN SANDWICH', price: 49, description: 'A delightful sandwich with corn and vegetables.' },
+                { id: 'sandwich2', name: 'CHEESE & CORN SANDWICH', price: 59, description: 'A classic combination of cheese and corn.' },
+                { id: 'sandwich3', name: 'TANDOORI PANEER SANDWICH', price: 119, description: 'Spicy tandoori paneer in a toasted sandwich.' },
+                { id: 'sandwich4', name: 'PANEER TADKA SANDWICH', price: 119, description: 'A flavorful sandwich with paneer and spices.' },
+                { id: 'sandwich5', name: 'CHEESE PANEER SANDWICH', price: 79, description: 'Cheese and paneer grilled to perfection.' },
+                { id: 'sandwich6', name: 'PIZZA JUNCTION SPL SANDWICH', price: 119, description: 'Our special sandwich with unique fillings.', bestseller: true },
+            ],
+            'Wraps & Fries': [
+                { id: 'wrap1', name: 'ALLO TIKKI WRAP', price: 59, description: 'A crispy aloo tikki wrapped in a fresh tortilla.' },
+                { id: 'wrap2', name: 'CHEESE & CORN WRAP', price: 79, description: 'A cheesy and corny delight in a wrap.' },
+                { id: 'wrap3', name: 'PANEER STUFF WRAP', price: 99, description: 'A hearty wrap stuffed with paneer.', bestseller: true },
+                { id: 'wrap4', name: 'PANEER TIKKA WRAP', price: 109, description: 'Spicy paneer tikka rolled in a wrap.' },
+                { id: 'wrap5', name: 'PIZZA JUNCTION SPL. WRAP', price: 119, description: 'Our signature wrap with special fillings.' },
+                { id: 'wrap6', name: 'FRENCH FRIES SALTY (FULL)', price: 99, description: 'Classic salty french fries.' },
+                { id: 'wrap7', name: 'FRENCH FRIES SALTY (HALF)', price: 59, description: 'A small portion of salty french fries.' },
+                { id: 'wrap8', name: 'PERI PERI FRIES (FULL)', price: 119, description: 'Spicy peri peri flavored french fries.' },
+                { id: 'wrap9', name: 'PERI PERI FRIES (HALF)', price: 69, description: 'A small portion of peri peri fries.' },
+                { id: 'wrap10', name: 'MASALA FRIES (FULL)', price: 149, description: 'Fries tossed in Indian spices.' },
+                { id: 'wrap11', name: 'MASALA FRIES (HALF)', price: 79, description: 'A small portion of masala fries.' },
+                { id: 'wrap12', name: 'LOADED FRIES (FULL)', price: 159, description: 'Fries loaded with cheese and toppings.' },
+                { id: 'wrap13', name: 'LOADED FRIES (HALF)', price: 99, description: 'A small portion of loaded fries.' },
+                { id: 'wrap14', name: 'CHEESE FRIES (FULL)', price: 149, description: 'Fries topped with melted cheese.' },
+                { id: 'wrap15', name: 'CHEESE FRIES (HALF)', price: 89, description: 'A small portion of cheese fries.' },
+            ],
+            'Pasta & Zingy Parcel': [
+                { id: 'pasta1', name: 'RED SAUCE PASTA', price: 119, description: 'Pasta in a tangy red sauce.' },
+                { id: 'pasta2', name: 'WHITE SAUCE PASTA', price: 149, description: 'Pasta in a creamy white sauce.', bestseller: true },
+                { id: 'pasta3', name: 'MIX SAUCE PASTA', price: 159, description: 'A mix of red and white sauces.' },
+                { id: 'pasta4', name: 'VEG ZINGY PARCEL', price: 39, description: 'A spicy and zingy veg parcel.' },
+                { id: 'pasta5', name: 'PANEER ZINGY PARCEL', price: 49, description: 'A spicy and zingy paneer parcel.' },
+                { id: 'pasta6', name: 'PANEER TADKA PARCEL', price: 69, description: 'A flavorful parcel with paneer and spices.' },
+                { id: 'pasta7', name: 'MAKHNI PANEER PARCEL', price: 69, description: 'A creamy paneer parcel.' },
+                { id: 'pasta8', name: 'PIZZA JUNCTION SPL. PARCEL', price: 79, description: 'Our special spicy parcel.', bestseller: true },
+            ],
+            'Garlic Breads': [
+                { id: 'gb1', name: 'PLAIN GARLIC BREAD', price: 59, description: 'Simple and classic garlic bread.' },
+                { id: 'gb2', name: 'VEG. GARLIC BREAD', price: 69, description: 'Garlic bread with vegetable toppings.' },
+                { id: 'gb3', name: 'CHEESE GARLIC BREAD', price: 79, description: 'Garlic bread topped with melted cheese.' },
+                { id: 'gb4', name: 'PANEER GARLIC BREAD', price: 89, description: 'Garlic bread with paneer toppings.' },
+                { id: 'gb5', name: 'VEG STUFF GARLIC BREAD', price: 99, description: 'Garlic bread stuffed with vegetables.' },
+                { id: 'gb6', name: 'PANEER STUFF GARLIC BREAD', price: 119, description: 'Garlic bread stuffed with paneer.', bestseller: true },
+                { id: 'gb7', name: 'TANDOORI PANEER GARLIC BREAD', price: 119, description: 'Tandoori paneer on garlic bread.' },
+                { id: 'gb8', name: 'CHEESE & CORN GARLIC BREAD', price: 109, description: 'Garlic bread with cheese and corn.' },
+            ],
+            'Snacks': [
+                { id: 'snack1', name: 'NUGGETS (6PCS.)', price: 79, description: 'Crispy veg nuggets.' },
+                { id: 'snack2', name: 'VEG. CHEESE FINGERS', price: 99, description: 'Cheesy veg fingers.' },
+                { id: 'snack3', name: 'PERI PERI SMILES', price: 89, description: 'Smiley fries with peri peri seasoning.' },
+                { id: 'snack4', name: 'CHEESE BINGO', price: 99, description: 'Cheesy and flavorful snack.' },
+                { id: 'snack5', name: 'SPICY NUGGETS', price: 89, description: 'Spicy veg nuggets.' },
+                { id: 'snack6', name: 'CUTLUT', price: 79, description: 'A traditional cutlet.' },
+                { id: 'snack7', name: 'CHEESE NACHOS', price: 99, description: 'Nachos loaded with cheese.', bestseller: true },
+            ],
+            'Mojito & Tea': [
+                { id: 'drink_m1', name: 'MOJITO MINT', price: 59, description: 'Refreshing mint mojito.' },
+                { id: 'drink_m2', name: 'GREEN APPLE', price: 59, description: 'Green apple flavored drink.' },
+                { id: 'drink_m3', name: 'BLUEBERRY', price: 59, description: 'Sweet and tangy blueberry drink.' },
+                { id: 'drink_m4', name: 'BLUE CORRACO', price: 59, description: 'A refreshing blue drink.' },
+                { id: 'drink_m5', name: 'ORANGE MOJITO', price: 59, description: 'Zesty orange flavored mojito.' },
+                { id: 'drink_m6', name: 'ADRAK/MASALA/ROSE BHARA KABAB TEA', price: 20, description: 'Flavored tea options.' },
+                { id: 'drink_m7', name: 'CHOCOLATE/ELACHI/KESAR/GURH TEA', price: 25, description: 'More flavored tea options.' },
+                { id: 'drink_m8', name: 'ELACHI KESAR TEA', price: 25, description: 'Aromatic elaichi and kesar tea.' },
+                { id: 'drink_m9', name: 'GURH MASALA/DOODH PATTI SPL. TEA', price: 30, description: 'Special tea blends.' },
+            ],
+            'Hot Coffee': [
+                { id: 'coffee1', name: 'HOT COFFEE', price: 29, description: 'Classic hot coffee.' },
+                { id: 'coffee2', name: 'STRONG HOT COFFEE', price: 34, description: 'Strong brewed hot coffee.' },
+                { id: 'coffee3', name: 'CHOCO HOT COFFEE', price: 39, description: 'Hot coffee with chocolate.' },
+                { id: 'coffee4', name: 'STRONG CHOCO HOT COFFEE', price: 39, description: 'Strong hot chocolate coffee.' },
+                { id: 'coffee5', name: 'CARAMEL HOT COFFEE', price: 39, description: 'Hot coffee with caramel flavor.', bestseller: true },
+            ],
+            'Cold Coffee': [
+                { id: 'cc1', name: 'CLASSIC COLD COFFEE (REG)', price: 49, description: 'Regular sized classic cold coffee.' },
+                { id: 'cc2', name: 'CLASSIC COLD COFFEE (LARGE)', price: 69, description: 'Large sized classic cold coffee.' },
+                { id: 'cc3', name: 'CHOCO COLD COFFEE (REG)', price: 59, description: 'Regular sized chocolate cold coffee.' },
+                { id: 'cc4', name: 'CHOCO COLD COFFEE (LARGE)', price: 79, description: 'Large sized chocolate cold coffee.' },
+                { id: 'cc5', name: 'HAZELNUT COLD COFFEE (REG)', price: 59, description: 'Regular sized hazelnut cold coffee.' },
+                { id: 'cc6', name: 'HAZELNUT COLD COFFEE (LARGE)', price: 79, description: 'Large sized hazelnut cold coffee.' },
+                { id: 'cc7', name: 'IRISH COLD COFFEE (REG)', price: 69, description: 'Regular sized Irish flavored cold coffee.' },
+                { id: 'cc8', name: 'IRISH COLD COFFEE (LARGE)', price: 89, description: 'Large sized Irish flavored cold coffee.' },
+                { id: 'cc9', name: 'DOUBLE SHOT COLD COFFEE (REG)', price: 59, description: 'Regular sized double shot cold coffee.' },
+                { id: 'cc10', name: 'DOUBLE SHOT COLD COFFEE (LARGE)', price: 79, description: 'Large sized double shot cold coffee.' },
+                { id: 'cc11', name: 'CARAMEL COLD COFFEE (REG)', price: 69, description: 'Regular sized caramel cold coffee.' },
+                { id: 'cc12', name: 'CARAMEL COLD COFFEE (LARGE)', price: 89, description: 'Large sized caramel cold coffee.' },
+            ],
+            'Shakes': [
+                { id: 'shake1', name: 'BUTTER SCOTCH SHAKE (NORMAL)', price: 49, description: 'Normal butter scotch shake.' },
+                { id: 'shake2', name: 'STRAWBERRY SHAKE (NORMAL)', price: 49, description: 'Normal strawberry shake.' },
+                { id: 'shake3', name: 'MANGO SHAKE (NORMAL)', price: 49, description: 'Normal mango shake.' },
+                { id: 'shake4', name: 'PINEAPPLE SHAKE (NORMAL)', price: 49, description: 'Normal pineapple shake.' },
+                { id: 'shake5', name: 'BLACK CURRANT SHAKE (NORMAL)', price: 59, description: 'Normal black currant shake.' },
+                { id: 'shake6', name: 'VANILLA SHAKE (NORMAL)', price: 49, description: 'Normal vanilla shake.' },
+                { id: 'shake7', name: 'CHOCOLATE SHAKE (NORMAL)', price: 59, description: 'Normal chocolate shake.' },
+                { id: 'shake8', name: 'BUBBLEGUM SHAKE (NORMAL)', price: 49, description: 'Normal bubblegum shake.' },
+                { id: 'shake9', name: 'OREO CARAMEL SHAKE (NORMAL)', price: 69, description: 'Normal oreo caramel shake.', bestseller: true },
+                { id: 'shake10', name: 'KIT KAT SHAKE (NORMAL)', price: 79, description: 'Normal kit kat shake.' },
+                { id: 'shake11', name: 'BROWNIE SHAKE (NORMAL)', price: 89, description: 'Normal brownie shake.' },
+                { id: 'shake12', name: 'ELACHI KESAR SHAKE (NORMAL)', price: 49, description: 'Normal elaichi kesar shake.' },
+                { id: 'shake13', name: 'BLUE BERRY SHAKE (NORMAL)', price: 59, description: 'Normal blue berry shake.' },
+                { id: 'shake14', name: 'RED WELVET SHAKE (NORMAL)', price: 49, description: 'Normal red velvet shake.' },
+                { id: 'shake15', name: 'MIX FRUIT SHAKE (NORMAL)', price: 49, description: 'Normal mix fruit shake.' },
+                { id: 'shake16', name: 'PUNJAB KESAR KULFI SHAKE (NORMAL)', price: 49, description: 'Normal punjab kesar kulfi shake.' },
+                { id: 'shake17', name: 'BUTTER SCOTCH SHAKE (W/ICE CREAM)', price: 79, description: 'Butter scotch shake with ice cream.' },
+                { id: 'shake18', name: 'STRAWBERRY SHAKE (W/ICE CREAM)', price: 79, description: 'Strawberry shake with ice cream.' },
+                { id: 'shake19', name: 'MANGO SHAKE (W/ICE CREAM)', price: 79, description: 'Mango shake with ice cream.' },
+                { id: 'shake20', name: 'PINEAPPLE SHAKE (W/ICE CREAM)', price: 79, description: 'Pineapple shake with ice cream.' },
+                { id: 'shake21', name: 'BLACK CURRANT SHAKE (W/ICE CREAM)', price: 79, description: 'Black currant shake with ice cream.' },
+                { id: 'shake22', name: 'VANILLA SHAKE (W/ICE CREAM)', price: 79, description: 'Vanilla shake with ice cream.' },
+                { id: 'shake23', name: 'CHOCOLATE SHAKE (W/ICE CREAM)', price: 79, description: 'Chocolate shake with ice cream.' },
+                { id: 'shake24', name: 'BUBBLEGUM SHAKE (W/ICE CREAM)', price: 79, description: 'Bubblegum shake with ice cream.' },
+                { id: 'shake25', name: 'OREO CARAMEL SHAKE (W/ICE CREAM)', price: 89, description: 'Oreo caramel shake with ice cream.' },
+                { id: 'shake26', name: 'KIT KAT SHAKE (W/ICE CREAM)', price: 99, description: 'Kit kat shake with ice cream.' },
+                { id: 'shake27', name: 'BROWNIE SHAKE (W/ICE CREAM)', price: 89, description: 'Brownie shake with ice cream.' },
+                { id: 'shake28', name: 'ELACHI KESAR SHAKE (W/ICE CREAM)', price: 79, description: 'Elaichi kesar shake with ice cream.' },
+                { id: 'shake29', name: 'BLUE BERRY SHAKE (W/ICE CREAM)', price: 79, description: 'Blue berry shake with ice cream.' },
+                { id: 'shake30', name: 'RED WELVET SHAKE (W/ICE CREAM)', price: 79, description: 'Red velvet shake with ice cream.' },
+                { id: 'shake31', name: 'MIX FRUIT SHAKE (W/ICE CREAM)', price: 79, description: 'Mix fruit shake with ice cream.' },
+                { id: 'shake32', name: 'SPECIAL BISCOFF SHAKE', price: 149, description: 'Special biscoff shake.' },
+                { id: 'shake33', name: 'PUNJAB KESAR KULFI SHAKE (W/ICE CREAM)', price: 79, description: 'Punjab kesar kulfi shake with ice cream.' },
+            ],
+            'Salad & Tacos': [
+                { id: 'salad1', name: 'PEANUT MASALA SALAD', price: 89, description: 'A tangy and spicy peanut salad.' },
+                { id: 'salad2', name: 'VEG SALAD', price: 69, description: 'Fresh mixed vegetable salad.' },
+                { id: 'salad3', name: 'GRILLED PANEER SALAD', price: 99, description: 'Salad with grilled paneer cubes.' },
+                { id: 'salad4', name: 'OUR SPL. SALAD', price: 119, description: 'Our signature mixed salad.' },
+                { id: 'salad5', name: 'MAKHNI PANEER SALAD', price: 99, description: 'Salad with creamy makhni paneer.' },
+                { id: 'salad6', name: 'RUSSIAN SALAD', price: 110, description: 'A classic Russian salad.' },
+                { id: 'salad7', name: 'CORN TACOS', price: 79, description: 'Tacos filled with corn.' },
+                { id: 'salad8', name: 'PANEER & TUFF TACOS', price: 99, description: 'Tacos filled with paneer and vegetables.' },
+            ],
+            'Veg Specials': [
+                { id: 'veg_spl1', name: 'VEG DELIGHT (R)', price: 129, description: 'Regular sized pizza with a variety of veg toppings.' },
+                { id: 'veg_spl2', name: 'VEG DELIGHT (M)', price: 269, description: 'Medium sized pizza with a variety of veg toppings.' },
+                { id: 'veg_spl3', name: 'VEG DELIGHT (L)', price: 399, description: 'Large sized pizza with a variety of veg toppings.' },
+                { id: 'veg_spl4', name: 'PEPPE PANEER (R)', price: 169, description: 'Regular sized paneer and pepper pizza.' },
+                { id: 'veg_spl5', name: 'PEPPE PANEER (M)', price: 249, description: 'Medium sized paneer and pepper pizza.' },
+                { id: 'veg_spl6', name: 'PEPPE PANEER (L)', price: 439, description: 'Large sized paneer and pepper pizza.' },
+                { id: 'veg_spl7', name: 'VEG VILLAGER SPL. (R)', price: 139, description: 'Regular sized village style special pizza.' },
+                { id: 'veg_spl8', name: 'VEG VILLAGER SPL. (M)', price: 279, description: 'Medium sized village style special pizza.' },
+                { id: 'veg_spl9', name: 'VEG VILLAGER SPL. (L)', price: 419, description: 'Large sized village style special pizza.' },
+                { id: 'veg_spl10', name: 'FARM FRESH (R)', price: 149, description: 'Regular sized farm fresh vegetable pizza.' },
+                { id: 'veg_spl11', name: 'FARM FRESH (M)', price: 319, description: 'Medium sized farm fresh vegetable pizza.' },
+                { id: 'veg_spl12', name: 'FARM FRESH (L)', price: 449, description: 'Large sized farm fresh vegetable pizza.' },
+                { id: 'veg_spl13', name: 'FARM HOUSE (R)', price: 159, description: 'Regular sized farm house style pizza.', bestseller: true },
+                { id: 'veg_spl14', name: 'FARM HOUSE (M)', price: 329, description: 'Medium sized farm house style pizza.', bestseller: true },
+                { id: 'veg_spl15', name: 'FARM HOUSE (L)', price: 459, description: 'Large sized farm house style pizza.', bestseller: true },
+            ],
+            'Classic Pizza': [
+                { id: 'c_pizza1', name: 'MARGHERITA (R)', price: 99, description: 'Regular sized classic margherita pizza.' },
+                { id: 'c_pizza2', name: 'MARGHERITA (M)', price: 219, description: 'Medium sized classic margherita pizza.' },
+                { id: 'c_pizza3', name: 'MARGHERITA (L)', price: 339, description: 'Large sized classic margherita pizza.' },
+                { id: 'c_pizza4', name: 'CHEESE & CORN (R)', price: 119, description: 'Regular sized pizza with cheese and corn.' },
+                { id: 'c_pizza5', name: 'CHEESE & CORN (M)', price: 239, description: 'Medium sized pizza with cheese and corn.' },
+                { id: 'c_pizza6', name: 'CHEESE & CORN (L)', price: 359, description: 'Large sized pizza with cheese and corn.' },
+                { id: 'c_pizza7', name: 'CHEESY TOMATO (R)', price: 119, description: 'Regular sized pizza with cheese and tomato.' },
+                { id: 'c_pizza8', name: 'CHEESY TOMATO (M)', price: 239, description: 'Medium sized pizza with cheese and tomato.' },
+                { id: 'c_pizza9', name: 'CHEESY TOMATO (L)', price: 359, description: 'Large sized pizza with cheese and tomato.' },
+                { id: 'c_pizza10', name: 'CHEESY MUSHROOM (R)', price: 119, description: 'Regular sized pizza with cheese and mushroom.' },
+                { id: 'c_pizza11', name: 'CHEESY MUSHROOM (M)', price: 239, description: 'Medium sized pizza with cheese and mushroom.' },
+                { id: 'c_pizza12', name: 'CHEESY MUSHROOM (L)', price: 359, description: 'Large sized pizza with cheese and mushroom.' },
+                { id: 'c_pizza13', name: 'CHEESY PANEER (R)', price: 119, description: 'Regular sized pizza with cheese and paneer.' },
+                { id: 'c_pizza14', name: 'CHEESY PANEER (M)', price: 219, description: 'Medium sized pizza with cheese and paneer.' },
+                { id: 'c_pizza15', name: 'CHEESY PANEER (L)', price: 349, description: 'Large sized pizza with cheese and paneer.' },
+                { id: 'c_pizza16', name: 'MUSHROOM, CAPSICUM & ONION (R)', price: 129, description: 'Regular sized pizza with mushroom, capsicum, and onion.', bestseller: true },
+                { id: 'c_pizza17', name: 'MUSHROOM, CAPSICUM & ONION (M)', price: 249, description: 'Medium sized pizza with mushroom, capsicum, and onion.', bestseller: true },
+                { id: 'c_pizza18', name: 'MUSHROOM, CAPSICUM & ONION (L)', price: 399, description: 'Large sized pizza with mushroom, capsicum, and onion.', bestseller: true },
+            ],
+            'Paneer Special': [
+                { id: 'p_spl1', name: 'CHILLI PANEER (R)', price: 129, description: 'Regular sized pizza with spicy chilli paneer.' },
+                { id: 'p_spl2', name: 'CHILLI PANEER (M)', price: 219, description: 'Medium sized pizza with spicy chilli paneer.' },
+                { id: 'p_spl3', name: 'CHILLI PANEER (L)', price: 389, description: 'Large sized pizza with spicy chilli paneer.' },
+                { id: 'p_spl4', name: 'TANDOORI PANEER (R)', price: 149, description: 'Regular sized pizza with smoky tandoori paneer.' },
+                { id: 'p_spl5', name: 'TANDOORI PANEER (M)', price: 219, description: 'Medium sized pizza with smoky tandoori paneer.' },
+                { id: 'p_spl6', name: 'TANDOORI PANEER (L)', price: 419, description: 'Large sized pizza with smoky tandoori paneer.' },
+                { id: 'p_spl7', name: 'ACHARI PANEER (R)', price: 159, description: 'Regular sized pizza with tangy achari paneer.', bestseller: true },
+                { id: 'p_spl8', name: 'ACHARI PANEER (M)', price: 249, description: 'Medium sized pizza with tangy achari paneer.', bestseller: true },
+                { id: 'p_spl9', name: 'ACHARI PANEER (L)', price: 389, description: 'Large sized pizza with tangy achari paneer.', bestseller: true },
+                { id: 'p_spl10', name: 'MAKHANI PANEER (R)', price: 169, description: 'Regular sized pizza with creamy makhani paneer.' },
+                { id: 'p_spl11', name: 'MAKHANI PANEER (M)', price: 249, description: 'Medium sized pizza with creamy makhani paneer.' },
+                { id: 'p_spl12', name: 'MAKHANI PANEER (L)', price: 249, description: 'Large sized pizza with creamy makhani paneer.' },
+                { id: 'p_spl13', name: 'BING-O-PANEER (R)', price: 179, description: 'Regular sized pizza with a variety of paneer toppings.' },
+                { id: 'p_spl14', name: 'BING-O-PANEER (M)', price: 299, description: 'Medium sized pizza with a variety of paneer toppings.' },
+                { id: 'p_spl15', name: 'BING-O-PANEER (L)', price: 399, description: 'Large sized pizza with a variety of paneer toppings.' },
+                { id: 'p_spl16', name: 'SPL. SPAIY HEART PIZZA (R)', price: 149, description: 'Regular sized spicy heart-shaped pizza.' },
+                { id: 'p_spl17', name: 'SPL. SPAIY HEART PIZZA (M)', price: 249, description: 'Medium sized spicy heart-shaped pizza.' },
+                { id: 'p_spl18', name: 'SPL. SPAIY HEART PIZZA (L)', price: 349, description: 'Large sized spicy heart-shaped pizza.' },
+                { id: 'p_spl19', name: 'PIZZA JUNCTION SPL. PIZZA (R)', price: 179, description: 'Regular sized signature pizza.' },
+                { id: 'p_spl20', name: 'PIZZA JUNCTION SPL. PIZZA (M)', price: 319, description: 'Medium sized signature pizza.' },
+                { id: 'p_spl21', name: 'PIZZA JUNCTION SPL. PIZZA (L)', price: 399, description: 'Large sized signature pizza.' },
+                { id: 'p_spl22', name: 'STAR FISH PIZZA (R)', price: 179, description: 'Regular sized star fish shaped pizza.' },
+                { id: 'p_spl23', name: 'STAR FISH PIZZA (M)', price: 319, description: 'Medium sized star fish shaped pizza.' },
+                { id: 'p_spl24', name: 'STAR FISH PIZZA (L)', price: 399, description: 'Large sized star fish shaped pizza.' },
+            ],
+            'Pizza Mania & Doubles': [
+                { id: 'pmd1', name: 'CORN PIZZA MANIA', price: 59, description: 'Small pizza with corn.' },
+                { id: 'pmd2', name: 'TOMATO PIZZA MANIA', price: 59, description: 'Small pizza with tomato.' },
+                { id: 'pmd3', name: 'ONION PIZZA MANIA', price: 69, description: 'Small pizza with onion.' },
+                { id: 'pmd4', name: 'MUSHROOM PIZZA MANIA', price: 79, description: 'Small pizza with mushroom.' },
+                { id: 'pmd5', name: 'PANEER PIZZA MANIA', price: 79, description: 'Small pizza with paneer.', bestseller: true },
+                { id: 'pmd6', name: 'CHEESE/CAPSICUM PIZZA MANIA', price: 79, description: 'Small pizza with cheese or capsicum.' },
+                { id: 'pmd7', name: 'ONION & CAPSICUM PIZZA MANIA', price: 79, description: 'Small pizza with onion and capsicum.' },
+                { id: 'pmd8', name: 'CORN & CAPSICUM PIZZA MANIA', price: 79, description: 'Small pizza with corn and capsicum.' },
+                { id: 'pmd9', name: 'MUSHROOM & CAPSICUM PIZZA MANIA', price: 89, description: 'Small pizza with mushroom and capsicum.' },
+                { id: 'pmd10', name: 'PANEER & CORN PIZZA MANIA', price: 99, description: 'Small pizza with paneer and corn.', bestseller: true },
+                { id: 'pmd11', name: 'PANEER & ONION PIZZA MANIA', price: 99, description: 'Small pizza with paneer and onion.' },
+                { id: 'pmd12', name: 'MUSHROOM & PINEAPPLE PIZZA MANIA', price: 99, description: 'Small pizza with mushroom and pineapple.' },
+            ],
+            'Maggi': [
+                { id: 'maggi1', name: 'PLAIN MAGGI', price: 29, description: 'A fresh and simple Maggi, as you love it.' },
+                { id: 'maggi2', name: 'CHEESE & CORN MAGGI', price: 49, description: 'Ultimate Lovable and memorable Maggi loaded with cheese, corns and hotness.', bestseller: true },
+                { id: 'maggi3', name: 'TANDOORI PANEER MAGGI', price: 59, description: 'A tangy paneer bursting like snowfall on beloved Maggi.' },
+                { id: 'maggi4', name: 'PIZZA JUNC. SPL. MAGGI', price: 69, description: 'Carefully cooked with freshness, love, and taste overloaded.' },
+            ],
+            'Combo': [
+                { id: 'combo1', name: 'VEG PIZZA + 2 SHAKES', price: 309, description: 'A great combo for two.' },
+                { id: 'combo2', name: 'VEG PIZZA + 2 SHAKES + 2 FRIES', price: 549, description: 'The ultimate combo meal.' },
+                { id: 'combo3', name: 'SANDWICH + BURGER + COCA COLA', price: 199, description: 'A tasty combo for a quick meal.' },
+                { id: 'combo4', name: 'MARGHERITA PIZZA + BURGER + FRIES + SHAKE', price: 270, description: 'The full meal deal.' },
+                { id: 'combo5', name: 'BURGER + FRIES + COLD DRINK', price: 129, description: 'A classic combo.' },
+                { id: 'combo6', name: '2 CHEESY BURGER', price: 139, description: 'Two cheesy burgers for sharing.' },
+                { id: 'combo7', name: '2 CHEESY WRAP', price: 229, description: 'Two delicious cheesy wraps.' },
+                { id: 'combo8', name: 'BURGER + FRIES + SHAKE', price: 199, description: 'A perfect combo.', bestseller: true },
+                { id: 'combo9', name: '2 PANEER TIKKA WRAP', price: 249, description: 'Two wraps with spicy paneer tikka.' },
+                { id: 'combo10', name: '2 BURGER + FRIES + COCA COLA', price: 205, description: 'Two burgers, fries, and a drink.' },
+                { id: 'combo11', name: 'KULHAD PIZZA', price: 159, description: 'Pizza served in a kulhad.' },
+                { id: 'combo12', name: 'VEG PIZZA + ZINGY PARCEL + COLD DRINK', price: 179, description: 'A quick and easy combo.' },
+            ],
+            'Cold Drinks': [
+                { id: 'drink1', name: 'COLD DRINK GLASS (400ML)', price: 29, description: 'Ensuring ice cold taste on every SIP.' },
+                { id: 'drink2', name: 'WATER BOTTLE', price: 20, description: 'Fill yourself with H2O, stay hydrated, stay blessed.' },
+                { id: 'drink3', name: 'HELL CAN', price: 60, description: 'Gives you power like HELL.' },
+                { id: 'drink4', name: 'COLD DRINK', price: 20, description: 'It’s casual & enjoyable too.' },
+            ],
+            'Extra': [
+                { id: 'extra1', name: 'EXTRA TOPPING', price: 20, description: 'A generous portion of your favorite topping.' },
+                { id: 'extra2', name: 'CHEESE SLICE', price: 20, description: 'An extra slice of delicious cheese.' },
+                { id: 'extra3', name: 'SAUCE DIP', price: 20, description: 'A side of your choice of sauce for dipping.' },
+                { id: 'extra4', name: 'MOZZERELLA CHEESE (R)', price: 39, description: 'Extra mozzarella cheese for a regular pizza.' },
+                { id: 'extra5', name: 'MOZZERELLA CHEESE (M)', price: 69, description: 'Extra mozzarella cheese for a medium pizza.' }
+            ]
+        };
+
+        let cart = [];
+        let lastOrder = null;
+
+        // Function to create a menu item card
+        const createMenuItem = (item) => {
+            const cartItem = cart.find(i => i.id === item.id);
+            const inCart = !!cartItem;
+            const quantity = inCart ? cartItem.quantity : 0;
+
+            return `
+                <div class="bg-white rounded-2xl shadow-lg p-6 flex flex-col justify-between relative transition-transform duration-200 hover:scale-105 cursor-pointer" data-id="${item.id}" data-name="${item.name}" data-price="${item.price}">
+                    ${item.bestseller ? '<span class="bestseller-badge">★ Bestseller</span>' : ''}
+                    <div>
+                        <h3 class="text-xl font-bold text-gray-900">${item.name}</h3>
+                        <p class="text-sm text-gray-500 mt-2">${item.description}</p>
+                    </div>
+                    <div class="flex justify-between items-center mt-4">
+                        <span class="text-2xl font-bold text-yellow-500">₹${item.price}</span>
+                        <div class="flex items-center space-x-2">
+                            <button class="add-to-cart-btn bg-yellow-500 hover:bg-yellow-600 text-white text-base font-semibold px-6 py-3 rounded-lg shadow-md transition-colors ${inCart ? 'hidden' : ''}">
+                                Add to Cart
+                            </button>
+                            <div class="quantity-control-group flex items-center space-x-2 ${inCart ? '' : 'hidden'}">
+                                <button class="adjust-quantity-btn w-8 h-8 rounded-full flex items-center justify-center bg-gray-200 hover:bg-gray-300 text-gray-600 font-bold text-lg" data-action="decrease">-</button>
+                                <span class="quantity-display font-bold text-gray-800 w-6 text-center text-lg">${quantity}</span>
+                                <button class="adjust-quantity-btn w-8 h-8 rounded-full flex items-center justify-center bg-gray-200 hover:bg-gray-300 text-gray-600 font-bold text-lg" data-action="increase">+</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        };
+
+        // Function to render all menu items
+        const renderMenu = () => {
+            const menuContainer = document.getElementById('menu-container');
+            menuContainer.innerHTML = '';
+            for (const category in menuItems) {
+                const categorySection = document.createElement('section');
+                categorySection.className = 'w-full';
+                categorySection.innerHTML = `
+                    <h2 class="text-3xl font-bold text-gray-900 mb-6">${category.toUpperCase()}</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="${category.toLowerCase().replace(/\s/g, '-')}-menu">
+                        ${menuItems[category].map(createMenuItem).join('')}
+                    </div>
+                `;
+                menuContainer.appendChild(categorySection);
+            }
+        };
+
+        // Function to render cart items and total
+        const renderCart = () => {
+            const cartItemsContainer = document.getElementById('cart-items');
+            const cartTotalElement = document.getElementById('cart-total');
+
+            cartItemsContainer.innerHTML = '';
+            let total = 0;
+
+            if (cart.length === 0) {
+                cartItemsContainer.innerHTML = `
+                    <div class="flex flex-col items-center justify-center p-4 text-center text-gray-500 rounded-lg">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-10 h-10 mb-2 text-gray-400">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 1 1-6 0 3 3 0 0 1 6 0ZM21 17.25a3 3 0 1 1-6 0 3 3 0 0 1 6 0ZM15.75 12.75h2.25a.75.75 0 0 0 .75-.75V8.25a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v.584m10.165 3.526-.855.992-.477.553a1.5 1.5 0 0 1-.796.44l-2.484.578a1.5 1.5 0 0 1-1.391-.29l-.213-.178m10.165-3.526a1.5 1.5 0 0 1 2.235 1.834L19 12.5M10.165 9.75h.008V9.75h-.008Z" />
+                        </svg>
+                        <p class="text-sm font-medium">Your cart is empty.</p>
+                    </div>
+                `;
+                document.getElementById('checkout-btn').disabled = true;
+                document.getElementById('checkout-btn').classList.add('opacity-50', 'cursor-not-allowed');
+            } else {
+                document.getElementById('checkout-btn').disabled = false;
+                document.getElementById('checkout-btn').classList.remove('opacity-50', 'cursor-not-allowed');
+
+                cart.forEach(item => {
+                    total += item.price * item.quantity;
+                    const cartItem = document.createElement('div');
+                    cartItem.className = 'flex justify-between items-center bg-gray-50 p-2 rounded-xl shadow-sm border border-gray-200';
+                    cartItem.innerHTML = `
+                        <div class="flex items-center space-x-2">
+                            <span class="font-normal text-gray-800 text-sm">${item.name}</span>
+                        </div>
+                        <div class="flex items-center space-x-1" data-id="${item.id}">
+                            <button class="adjust-quantity-btn bg-gray-200 hover:bg-gray-300 text-gray-600 font-bold w-6 h-6 rounded-full flex items-center justify-center text-sm" data-action="decrease">-</button>
+                            <span class="font-bold text-gray-800 text-sm w-4 text-center">${item.quantity}</span>
+                            <button class="adjust-quantity-btn bg-gray-200 hover:bg-gray-300 text-gray-600 font-bold w-6 h-6 rounded-full flex items-center justify-center text-sm" data-action="increase">+</button>
+                            <button class="remove-from-cart-btn text-red-500 font-normal text-xs hover:text-red-600 transition-colors ml-2" data-id="${item.id}">
+                                Remove
+                            </button>
+                        </div>
+                    `;
+                    cartItemsContainer.appendChild(cartItem);
+                });
+            }
+
+            cartTotalElement.textContent = `₹${total.toFixed(2)}`;
+        };
+
+        // Function to show the modal
+        const showModal = (contentId) => {
+            const modal = document.getElementById('checkout-modal');
+            const optionSelection = document.getElementById('option-selection');
+            const orderSummary = document.getElementById('order-summary');
+            const confirmationPrompt = document.getElementById('confirmation-prompt');
+            const successMessage = document.getElementById('success-message');
+
+            // Hide all content sections first
+            optionSelection.classList.add('hidden');
+            orderSummary.classList.add('hidden');
+            confirmationPrompt.classList.add('hidden');
+            successMessage.classList.add('hidden');
+
+            // Show the requested content section
+            document.getElementById(contentId).classList.remove('hidden');
+            modal.style.display = 'flex';
+        };
+
+        // Function to hide the modal
+        const hideModal = () => {
+            const modal = document.getElementById('checkout-modal');
+            modal.style.display = 'none';
+        };
+
+        // Function to render the order summary with charges/discounts
+        const renderOrderSummary = (orderType) => {
+            const summaryItemsContainer = document.getElementById('summary-items');
+            const summaryDetails = document.getElementById('summary-details');
+            const summaryTotalElement = document.getElementById('summary-total');
+            const orderTypeDisplay = document.getElementById('order-type-display');
+
+            orderTypeDisplay.textContent = `Order Type: ${orderType}`;
+            summaryItemsContainer.innerHTML = '';
+            summaryDetails.innerHTML = '';
+
+            let subtotal = 0;
+            cart.forEach(item => {
+                const itemSubtotal = item.price * item.quantity;
+                subtotal += itemSubtotal;
+                const summaryItem = document.createElement('div');
+                summaryItem.className = 'flex justify-between text-gray-700 font-medium py-2';
+                summaryItem.innerHTML = `
+                    <span>${item.name} (x${item.quantity})</span>
+                    <span>₹${itemSubtotal}</span>
+                `;
+                summaryItemsContainer.appendChild(summaryItem);
+            });
+
+            // Calculate charges and discounts based on the new logic
+            let finalTotal = subtotal;
+            let deliveryCharge = 0;
+            let discount = 0;
+
+            if (orderType === 'DELIVERY') {
+                if (subtotal < 300) {
+                    deliveryCharge = 20;
+                }
+                finalTotal += deliveryCharge;
+            } else if (orderType === 'DINE-IN') {
+                if (subtotal >= 300) {
+                    discount = subtotal * 0.05;
+                }
+                finalTotal -= discount;
+            }
+
+            const subtotalItem = document.createElement('div');
+            subtotalItem.className = 'order-detail-item text-gray-700';
+            subtotalItem.innerHTML = `<span>Subtotal:</span><span>₹${subtotal.toFixed(2)}</span>`;
+            summaryDetails.appendChild(subtotalItem);
+
+            if (orderType === 'DELIVERY') {
+                const deliveryItem = document.createElement('div');
+                deliveryItem.className = 'order-detail-item text-gray-700';
+                deliveryItem.innerHTML = `<span>Delivery Charges:</span><span class="${deliveryCharge === 0 ? 'text-green-600 font-bold' : 'text-red-600 font-bold'}">₹${deliveryCharge.toFixed(2)}</span>`;
+                summaryDetails.appendChild(deliveryItem);
+            } else if (orderType === 'DINE-IN') {
+                const discountItem = document.createElement('div');
+                discountItem.className = 'order-detail-item text-gray-700';
+                discountItem.innerHTML = `<span>Discount (5%):</span><span class="text-green-600 font-bold">-₹${discount.toFixed(2)}</span>`;
+                summaryDetails.appendChild(discountItem);
+            }
+
+            summaryTotalElement.textContent = `₹${finalTotal.toFixed(2)}`;
+
+            // Store the order details for the invoice
+            lastOrder = {
+                orderType,
+                items: cart.map(item => ({ ...item })), // Deep copy
+                subtotal,
+                finalTotal,
+                deliveryCharge,
+                discount
+            };
+        };
+
+        // Function to generate and download the invoice as a PDF
+        const generateInvoice = () => {
+            if (!lastOrder) {
+                console.error('No order data to generate invoice.');
+                return;
+            }
+
+            const doc = new jsPDF();
+            const now = new Date();
+            const date = now.toLocaleDateString('en-IN');
+            const time = now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+
+            let y = 20; // Starting Y position for content
+            const margin = 20; // Left and right margin
+            const pageWidth = doc.internal.pageSize.getWidth();
+            const pageHeight = doc.internal.pageSize.getHeight();
+            const bottomMargin = 20;
+            const lineSpacing = 8;
+            const tableHeaderHeight = 12;
+
+            // Helper function to add a new page with header if needed
+            const addPageWithHeader = () => {
+                doc.addPage();
+                y = 20;
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(16);
+                doc.text('Order Items (cont.)', margin, y);
+                y += 8;
+                doc.setFontSize(12);
+                doc.text('Description', margin, y);
+                doc.text('Qty', 140, y, { align: 'center' });
+                doc.text('Price', pageWidth - margin, y, { align: 'right' });
+                y += 4;
+                doc.line(margin, y, pageWidth - margin, y);
+                y += 5;
+                doc.setFont('helvetica', 'normal');
+            };
+
+            // Invoice Header on the first page
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(26);
+            doc.setTextColor(30, 30, 30); // Dark grey
+            doc.text('Pizza Junction', pageWidth / 2, y, { align: 'center' });
+            y += 10;
+            doc.setFontSize(14);
+            doc.text('Exclusive Receipt', pageWidth / 2, y, { align: 'center' });
+            y += 12;
+
+            doc.setDrawColor(200, 200, 200);
+            doc.line(margin, y, pageWidth - margin, y);
+            y += 10;
+            
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(16);
+            doc.text('Order Details', margin, y);
+            y += 8;
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(12);
+            doc.text(`Invoice ID: #${Date.now()}`, margin, y);
+            doc.text(`Date: ${date}`, pageWidth - margin, y, { align: 'right' });
+            y += 6;
+            doc.text(`Order Type: ${lastOrder.orderType}`, margin, y);
+            doc.text(`Time: ${time}`, pageWidth - margin, y, { align: 'right' });
+            y += 12;
+
+            // Itemized Breakdown Header
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(16);
+            doc.text('Items', margin, y);
+            y += 8;
+
+            // Table Header
+            doc.setFontSize(12);
+            doc.setFont('helvetica', 'bold');
+            doc.text('Description', margin, y);
+            doc.text('Qty', 140, y, { align: 'center' });
+            doc.text('Price', pageWidth - margin, y, { align: 'right' });
+            y += 4;
+            doc.line(margin, y, pageWidth - margin, y);
+            y += 5;
+            doc.setFont('helvetica', 'normal');
+
+            // Item List with page break logic
+            lastOrder.items.forEach(item => {
+                // Check if adding the next line will exceed the page height
+                if (y + lineSpacing > pageHeight - bottomMargin) {
+                    addPageWithHeader();
+                }
+
+                const itemTotal = (item.price * item.quantity).toFixed(2);
+                doc.text(item.name, margin, y);
+                doc.text(item.quantity.toString(), 140, y, { align: 'center' });
+                doc.text(`₹${itemTotal}`, pageWidth - margin, y, { align: 'right' });
+                y += lineSpacing;
+            });
+
+            // Check for final summary placement
+            if (y + 50 > pageHeight - bottomMargin) {
+                addPageWithHeader();
+            } else {
+                y += 5;
+                doc.line(margin, y, pageWidth - margin, y);
+                y += 5;
+            }
+
+            // Financial Summary
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(12);
+            doc.text(`Subtotal:`, pageWidth - 60, y, { align: 'right' });
+            doc.text(`₹${lastOrder.subtotal.toFixed(2)}`, pageWidth - margin, y, { align: 'right' });
+            y += 8;
+
+            if (lastOrder.orderType === 'DELIVERY') {
+                doc.text(`Delivery Charges:`, pageWidth - 60, y, { align: 'right' });
+                doc.text(`+₹${lastOrder.deliveryCharge.toFixed(2)}`, pageWidth - margin, y, { align: 'right' });
+            } else if (lastOrder.orderType === 'DINE-IN' && lastOrder.discount > 0) {
+                doc.text(`Discount:`, pageWidth - 60, y, { align: 'right' });
+                doc.text(`-₹${lastOrder.discount.toFixed(2)}`, pageWidth - margin, y, { align: 'right' });
+            }
+            y += 10;
+            
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(16);
+            doc.text(`Final Total:`, pageWidth - 60, y, { align: 'right' });
+            doc.text(`₹${lastOrder.finalTotal.toFixed(2)}`, pageWidth - margin, y, { align: 'right' });
+            y += 20;
+
+            // Footer
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(12);
+            doc.text('Thank you for choosing Pizza Junction!', pageWidth / 2, y, { align: 'center' });
+            y += 6;
+            doc.text('We hope to see you again soon.', pageWidth / 2, y, { align: 'center' });
+
+            doc.save(`pizza_junction_invoice_${date.replace(/\//g, '-')}.pdf`);
+        };
+
+        // Main event listener for menu interactions (Add to Cart and quantity controls)
+        document.getElementById('menu-container').addEventListener('click', (e) => {
+            const card = e.target.closest('[data-id]');
+            if (!card) return;
+
+            const itemId = card.dataset.id;
+            let existingItem = cart.find(i => i.id === itemId);
+            const quantityDisplay = card.querySelector('.quantity-display');
+            
+            // Handle Add to Cart button click
+            if (e.target.classList.contains('add-to-cart-btn')) {
+                const itemName = card.dataset.name;
+                const itemPrice = parseFloat(card.dataset.price);
+
+                existingItem = { id: itemId, name: itemName, price: itemPrice, quantity: 1 };
+                cart.push(existingItem);
+
+                // Show quantity controls and hide the 'Add to Cart' button
+                e.target.classList.add('hidden');
+                card.querySelector('.quantity-control-group').classList.remove('hidden');
+                quantityDisplay.textContent = existingItem.quantity;
+
+            } else if (e.target.classList.contains('adjust-quantity-btn')) {
+                // Handle increase/decrease buttons
+                const action = e.target.dataset.action;
+
+                if (existingItem) {
+                    if (action === 'increase') {
+                        existingItem.quantity++;
+                    } else if (action === 'decrease') {
+                        existingItem.quantity--;
+                    }
+                    
+                    if (existingItem.quantity > 0) {
+                        quantityDisplay.textContent = existingItem.quantity;
+                    } else {
+                        // If quantity is 0, remove from cart and show 'Add to Cart' button
+                        const itemIndex = cart.findIndex(item => item.id === itemId);
+                        if (itemIndex > -1) {
+                            cart.splice(itemIndex, 1);
+                        }
+                        card.querySelector('.quantity-control-group').classList.add('hidden');
+                        card.querySelector('.add-to-cart-btn').classList.remove('hidden');
+                    }
+                }
+            }
+
+            renderCart();
+        });
+
+        // Event delegation for quantity buttons and remove button in the cart
+        document.getElementById('cart-items').addEventListener('click', (e) => {
+            const button = e.target.closest('button');
+            if (!button) return;
+
+            const parentItem = button.closest('[data-id]');
+            if (!parentItem) return;
+
+            const itemId = parentItem.dataset.id;
+            const existingItemIndex = cart.findIndex(item => item.id === itemId);
+
+            if (button.classList.contains('adjust-quantity-btn')) {
+                const action = button.dataset.action;
+                if (existingItemIndex > -1) {
+                    if (action === 'increase') {
+                        cart[existingItemIndex].quantity++;
+                    } else if (action === 'decrease' && cart[existingItemIndex].quantity > 1) {
+                        cart[existingItemIndex].quantity--;
+                    } else if (action === 'decrease' && cart[existingItemIndex].quantity === 1) {
+                        // If quantity is 1 and user clicks '-', remove it
+                        cart.splice(existingItemIndex, 1);
+                    }
+                }
+                renderCart();
+            } else if (button.classList.contains('remove-from-cart-btn')) {
+                if (existingItemIndex > -1) {
+                    cart.splice(existingItemIndex, 1);
+                }
+                renderCart();
+            }
+        });
+
+        // Event listeners for the checkout flow
+        document.getElementById('checkout-btn').addEventListener('click', () => {
+            if (cart.length > 0) {
+                showModal('option-selection');
+            }
+        });
+
+        document.getElementById('close-modal-btn').addEventListener('click', hideModal);
+
+        document.getElementById('dine-in-btn').addEventListener('click', () => {
+            renderOrderSummary('DINE-IN');
+            showModal('order-summary');
+        });
+
+        document.getElementById('delivery-btn').addEventListener('click', () => {
+            renderOrderSummary('DELIVERY');
+            showModal('order-summary');
+        });
+
+        document.getElementById('submit-order-btn').addEventListener('click', () => {
+            showModal('confirmation-prompt');
+        });
+
+        document.getElementById('confirm-yes-btn').addEventListener('click', () => {
+            // Final submission logic
+            generateInvoice(); // Automatically generate and download invoice
+            showModal('success-message');
+            cart = [];
+            renderCart();
+            renderMenu();
+        });
+
+        document.getElementById('confirm-no-btn').addEventListener('click', () => {
+            // Go back to the order summary
+            showModal('order-summary');
+        });
+
+        // Initial render on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            renderMenu();
+            renderCart();
+        });
+    </script>
+</body>
+</html>

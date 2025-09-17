@@ -175,7 +175,7 @@
         <div class="bg-[var(--color-card)] rounded-3xl shadow-xl p-3 lg:sticky lg:top-8 lg:h-fit mobile-fix">
             <h2 class="text-2xl font-bold text-[var(--color-secondary)] mb-4">Your Cart</h2>
             
-            <div class="overflow-y-auto no-scrollbar pr-2">
+            <div class="overflow-y-auto max-h-[120px] no-scrollbar pr-2">
                 <div id="cart-items" class="space-y-2">
                     </div>
             </div>
@@ -513,7 +513,7 @@
         const setMenuSpacing = () => {
             const cartElement = document.querySelector('.mobile-fix');
             const menuContent = document.querySelector('.content-spacing');
-            if (cartElement && menuContent && window.innerWidth < 1024) {
+            if (cartElement && menuContent && window.innerWidth < 1023) {
                 const cartHeight = cartElement.offsetHeight;
                 menuContent.style.paddingBottom = `${cartHeight + 20}px`; // Add a little extra space
             } else {

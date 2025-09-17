@@ -3,29 +3,53 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pizza Junction</title>
-    <!-- Tailwind CSS CDN -->
+    <title>Pizza Junction - The Luxurious Taste</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- jsPDF CDN for generating PDF invoices -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        /* A more professional and luxurious color palette */
+        :root {
+            --color-primary: #1a1a1a;    /* Dark Charcoal */
+            --color-secondary: #ffc107; /* Gold Accent */
+            --color-background: #0d0d0d; /* Almost Black Background */
+            --color-text: #e0e0e0;      /* Light Gray Text */
+            --color-card: #2c2c2c;      /* Slightly lighter card background */
+            --color-border: #444444;    /* Dark border */
+        }
         body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f0f4f8; /* A light, clean background */
+            font-family: 'Lato', sans-serif;
+            background-color: var(--color-background);
+            color: var(--color-text);
+        }
+        h1, h2, h3 {
+            font-family: 'Playfair Display', serif;
+            color: var(--color-secondary);
         }
         .bestseller-badge {
             position: absolute;
             top: -0.5rem;
             right: -0.5rem;
-            background-color: #f59e0b;
-            color: white;
+            background-color: var(--color-secondary);
+            color: var(--color-primary);
             padding: 0.25rem 0.75rem;
             border-radius: 9999px;
             font-size: 0.75rem;
             font-weight: 600;
             text-transform: uppercase;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2), 0 2px 4px -1px rgba(0, 0, 0, 0.1);
+        }
+        /* New hero section styling */
+        .hero-section {
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed; /* Parallax effect */
+            position: relative;
+        }
+        .hero-overlay {
+            background-color: rgba(0, 0, 0, 0.6);
         }
         /* Modal styling */
         .modal {
@@ -34,23 +58,23 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.7);
-            display: none; /* Hidden by default */
+            background-color: rgba(0, 0, 0, 0.8);
+            display: none;
             align-items: center;
             justify-content: center;
             z-index: 1000;
         }
         .modal-content {
-            background-color: #ffffff;
+            background-color: var(--color-card);
             padding: 2.5rem;
             border-radius: 1.5rem;
             width: 90%;
             max-width: 550px;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2), 0 4px 6px -2px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.2);
             position: relative;
             display: flex;
             flex-direction: column;
-            max-height: 90vh; /* Ensure modal fits on screen */
+            max-height: 90vh;
         }
         .modal-close {
             position: absolute;
@@ -59,7 +83,7 @@
             cursor: pointer;
             font-size: 2rem;
             line-height: 1;
-            color: #4a5568;
+            color: var(--color-text);
             font-weight: 300;
         }
         .order-detail-item {
@@ -68,92 +92,111 @@
             align-items: center;
             padding: 0.5rem 0;
         }
-        .scroll-smooth {
-            scroll-behavior: smooth;
-        }
         .no-scrollbar::-webkit-scrollbar {
             display: none;
         }
         .no-scrollbar {
-            -ms-overflow-style: none; /* IE and Edge */
-            scrollbar-width: none; /* Firefox */
+            -ms-overflow-style: none;
+            scrollbar-width: none;
         }
-        /* Mobile-specific adjustments for the sidebar */
         @media (max-width: 1023px) {
             .mobile-fix {
                 position: fixed;
                 bottom: 0;
                 left: 0;
                 width: 100%;
-                z-index: 50;
-                border-top-left-radius: 2rem;
-                border-top-right-radius: 2rem;
-                padding: 1.5rem;
+                z-index: 50; /* Ensure it stays on top of content */
+                border-radius: 0;
                 box-shadow: 0 -4px 6px -1px rgba(0, 0, 0, 0.1), 0 -2px 4px -1px rgba(0, 0, 0, 0.06);
             }
-            .content-spacing {
-                padding-bottom: 12rem; /* Add padding to prevent content from being hidden behind the fixed bar */
-            }
+        }
+        /* Styles for Collapsible Sections */
+        .collapsible-section {
+            transition: max-height 0.5s ease-in-out, opacity 0.3s ease-in-out;
+            overflow: hidden;
+            max-height: 2000px; /* A large value to allow expansion */
+            opacity: 1;
+        }
+        .collapsible-section.collapsed {
+            max-height: 0;
+            opacity: 0;
+        }
+        .category-header {
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 0;
+        }
+        .category-header h2 {
+            margin-bottom: 0;
+        }
+        .category-header svg {
+            transition: transform 0.3s ease;
+        }
+        .category-header.collapsed svg {
+            transform: rotate(-90deg);
         }
     </style>
 </head>
-<body class="bg-gray-100 flex flex-col lg:flex-row items-start justify-center min-h-screen p-4 scroll-smooth">
+<body class="bg-[var(--color-background)] flex flex-col items-start justify-center min-h-screen">
+    
+    <div class="hero-section w-full h-[60vh] md:h-[80vh] bg-cover bg-center bg-fixed" style="background-image: url('https://images.unsplash.com/photo-1628840250005-224856a42207?ixlib=rb-4.0.3&q=80&fm=jpg&crop=entropy&cs=tinysrgb&w=1920&fit=max');">
+        <div class="hero-overlay absolute inset-0 flex items-center justify-center text-center">
+            <div class="p-8">
+                <h1 class="text-6xl md:text-8xl font-extrabold text-[var(--color-secondary)] leading-tight tracking-wide drop-shadow-lg">Pizza Junction</h1>
+                <p class="mt-4 text-xl md:text-2xl font-light text-[var(--color-text)]">“Crafted with Passion. Served with Pride.”</p>
+            </div>
+        </div>
+    </div>
 
-    <div class="container mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8 max-w-7xl content-spacing">
+    <div class="container mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8 max-w-7xl p-4 mt-8 lg:mt-16">
 
-        <!-- Main Content (Menu) -->
-        <div class="lg:col-span-2">
-            <header class="bg-white rounded-3xl shadow-xl p-8 mb-8 text-center border-t-8 border-yellow-500">
-                <h1 class="text-5xl font-extrabold text-gray-900 leading-tight">Pizza Junction</h1>
-                <p class="mt-2 text-xl font-medium text-gray-600">“Crafted with Passion. Served with Pride.”</p>
-                <div class="mt-6 flex flex-col sm:flex-row justify-center items-center space-y-2 sm:space-y-0 sm:space-x-6 text-gray-500 font-semibold text-sm sm:text-base">
+        <div class="lg:col-span-2 content-spacing">
+            <header class="bg-[var(--color-card)] rounded-3xl shadow-xl p-8 mb-8 text-center border-t-8 border-[var(--color-secondary)]">
+                <p class="text-lg font-light text-[var(--color-text)] mb-4">Discover our exquisite menu.</p>
+                <div class="mt-6 flex flex-col sm:flex-row justify-center items-center space-y-2 sm:space-y-0 sm:space-x-6 text-[var(--color-text)] font-semibold text-sm sm:text-base">
                     <p class="flex items-center"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-blue-500" viewBox="0 0 20 20" fill="currentColor">
                         <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clip-rule="evenodd" />
                     </svg>DINE-IN: 4:00 PM - 10:30 PM</p>
                     <p class="flex items-center"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-green-500" viewBox="0 0 20 20" fill="currentColor">
                         <path fill-rule="evenodd" d="M7 2a2 2 0 00-2 2v12a2 2 0 002 2h6a2 2 0 002-2V4a2 2 0 00-2-2H7zm3 1a1 1 0 100 2 1 1 0 000-2z" clip-rule="evenodd" />
                     </svg>DELIVERY: ALL DAY</p>
-                    <p class="flex items-center"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-gray-500" viewBox="0 0 20 20" fill="currentColor">
+                    <p class="flex items-center"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-[var(--color-text)]" viewBox="0 0 20 20" fill="currentColor">
                         <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.741 4.451a1 1 0 01-.54 1.06l-1.548.774a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.451.741a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
                     </svg>7888412267</p>
                 </div>
             </header>
 
             <main class="space-y-12" id="menu-container">
-                <!-- Menu categories will be dynamically added here -->
-            </main>
+                </main>
         </div>
 
-        <!-- Sidebar (Cart) -->
-        <div class="bg-white rounded-3xl shadow-xl p-3 lg:sticky lg:top-8 lg:h-fit mobile-fix">
-            <h2 class="text-2xl font-bold text-gray-900 mb-4">Your Cart</h2>
+        <div class="bg-[var(--color-card)] rounded-3xl shadow-xl p-3 lg:sticky lg:top-8 lg:h-fit mobile-fix">
+            <h2 class="text-2xl font-bold text-[var(--color-secondary)] mb-4">Your Cart</h2>
             
-            <!-- This is the new scrollable container for the cart items -->
-            <div class="max-h-[10rem] lg:max-h-16 overflow-y-auto no-scrollbar pr-2">
+            <div class="overflow-y-auto no-scrollbar pr-2">
                 <div id="cart-items" class="space-y-2">
-                    <!-- Cart items will be dynamically added here -->
-                </div>
+                    </div>
             </div>
 
-            <!-- The total and checkout button are now outside the scrollable area -->
-            <div class="mt-4 pt-3 border-t border-gray-200">
-                <div class="flex justify-between font-bold text-gray-900 text-xl">
+            <div class="mt-4 pt-3 border-t border-[var(--color-border)]">
+                <div class="flex justify-between font-bold text-[var(--color-secondary)] text-xl">
                     <span>Total:</span>
                     <span id="cart-total">₹0.00</span>
                 </div>
             </div>
-            <button id="checkout-btn" class="w-full mt-4 bg-yellow-500 text-white py-3 rounded-xl font-bold text-lg hover:bg-yellow-600 transition-colors shadow-lg">
+            <button id="checkout-btn" class="w-full mt-4 bg-[var(--color-secondary)] text-[var(--color-primary)] py-3 rounded-xl font-bold text-lg hover:bg-[#d49905] transition-colors shadow-lg">
                 Proceed to Checkout
             </button>
         </div>
 
     </div>
 
-    <!-- The Checkout Modal -->
     <div id="checkout-modal" class="modal">
         <div class="modal-content">
             <span class="modal-close" id="close-modal-btn">&times;</span>
-            <h6 class="text-3xl font-bold text-gray-900 mb-6 text-center">PIZZA JUNCTION</h6>
+            <h6 class="text-3xl font-bold text-[var(--color-secondary)] mb-6 text-center">PIZZA JUNCTION</h6>
 
             <div id="option-selection" class="space-y-4">
                 <button id="dine-in-btn" class="w-full bg-blue-500 text-white py-4 rounded-xl font-semibold hover:bg-blue-600 transition-colors shadow-lg">
@@ -164,34 +207,30 @@
                 </button>
             </div>
 
-            <!-- New responsive order summary with scrollable list and fixed button -->
             <div id="order-summary" class="hidden flex flex-col flex-grow">
-                <h3 class="text-2xl font-semibold text-gray-900 mb-4">Order Summary</h3>
-                <p class="text-sm text-gray-500 mb-4 font-semibold" id="order-type-display"></p>
+                <h3 class="text-2xl font-semibold text-[var(--color-text)] mb-4">Order Summary</h3>
+                <p class="text-sm text-[var(--color-text)] mb-4 font-semibold" id="order-type-display"></p>
                 
                 <div class="overflow-y-auto no-scrollbar pr-2 mb-4 max-h-[250px]">
                     <div id="summary-items" class="space-y-2">
-                        <!-- Order items will be displayed here -->
-                    </div>
+                        </div>
                 </div>
                 
-                <!-- This section is now permanently fixed at the bottom of the modal -->
-                <div class="pt-4 border-t border-gray-200 mt-auto">
+                <div class="pt-4 border-t border-[var(--color-border)] mt-auto">
                     <div id="summary-details">
-                        <!-- Dynamic details like delivery charges or discounts will be here -->
-                    </div>
-                    <div class="flex justify-between font-bold text-gray-900 text-xl border-t pt-4">
+                        </div>
+                    <div class="flex justify-between font-bold text-[var(--color-secondary)] text-xl border-t pt-4">
                         <span>Final Total:</span>
                         <span id="summary-total">₹0.00</span>
                     </div>
-                    <button id="submit-order-btn" class="w-full mt-4 bg-yellow-500 text-white py-4 rounded-xl font-semibold hover:bg-yellow-600 transition-colors shadow-lg">
+                    <button id="submit-order-btn" class="w-full mt-4 bg-[var(--color-secondary)] text-[var(--color-primary)] py-4 rounded-xl font-semibold hover:bg-[#d49905] transition-colors shadow-lg">
                         Submit Order
                     </button>
                 </div>
             </div>
 
             <div id="confirmation-prompt" class="hidden text-center mt-4">
-                <p class="text-lg font-semibold text-gray-900">Confirm and submit your order?</p>
+                <p class="text-lg font-semibold text-[var(--color-text)]">Confirm and submit your order?</p>
                 <div class="mt-6 flex justify-center space-x-4">
                     <button id="confirm-yes-btn" class="bg-green-500 text-white py-3 px-8 rounded-xl font-semibold hover:bg-green-600 shadow-md">Yes, submit</button>
                     <button id="confirm-no-btn" class="bg-gray-300 text-gray-800 py-3 px-8 rounded-xl font-semibold hover:bg-gray-400 shadow-md">No, go back</button>
@@ -200,7 +239,7 @@
 
             <div id="success-message" class="hidden text-center mt-4">
                 <p class="text-xl font-bold text-green-600">Order submitted successfully!</p>
-                <p class="mt-2 text-gray-700">Thank you! Please share invoice pdf with us on whatsapp for furthur processing.</p>
+                <p class="mt-2 text-[var(--color-text)]">Thank you! Please share invoice pdf with us on whatsapp for furthur processing.</p>
             </div>
         </div>
     </div>
@@ -208,6 +247,7 @@
     <script>
         const { jsPDF } = window.jspdf;
 
+        // Menu items remain the same, as per the original file.
         const menuItems = {
             'Burgers': [
                 { id: 'burger1', name: 'CLASSIC ALOO TIKKI BUN', price: 39, description: 'A crispy potato patty with fresh onions, and our signature sauce, all in a soft bun.' },
@@ -469,6 +509,18 @@
         let cart = [];
         let lastOrder = null;
 
+        // Function to dynamically set padding based on cart height
+        const setMenuSpacing = () => {
+            const cartElement = document.querySelector('.mobile-fix');
+            const menuContent = document.querySelector('.content-spacing');
+            if (cartElement && menuContent && window.innerWidth < 1024) {
+                const cartHeight = cartElement.offsetHeight;
+                menuContent.style.paddingBottom = `${cartHeight + 20}px`; // Add a little extra space
+            } else {
+                 menuContent.style.paddingBottom = ''; // Reset for desktop view
+            }
+        };
+
         // Function to create a menu item card
         const createMenuItem = (item) => {
             const cartItem = cart.find(i => i.id === item.id);
@@ -476,22 +528,22 @@
             const quantity = inCart ? cartItem.quantity : 0;
 
             return `
-                <div class="bg-white rounded-2xl shadow-lg p-6 flex flex-col justify-between relative transition-transform duration-200 hover:scale-105 cursor-pointer" data-id="${item.id}" data-name="${item.name}" data-price="${item.price}">
+                <div class="bg-[var(--color-card)] rounded-2xl shadow-lg p-6 flex flex-col justify-between relative transition-transform duration-200 hover:scale-105 cursor-pointer border border-[var(--color-border)]" data-id="${item.id}" data-name="${item.name}" data-price="${item.price}">
                     ${item.bestseller ? '<span class="bestseller-badge">★ Bestseller</span>' : ''}
                     <div>
-                        <h3 class="text-xl font-bold text-gray-900">${item.name}</h3>
-                        <p class="text-sm text-gray-500 mt-2">${item.description}</p>
+                        <h3 class="text-xl font-bold text-[var(--color-secondary)]">${item.name}</h3>
+                        <p class="text-sm font-light text-[var(--color-text)] mt-2">${item.description}</p>
                     </div>
                     <div class="flex justify-between items-center mt-4">
-                        <span class="text-2xl font-bold text-yellow-500">₹${item.price}</span>
+                        <span class="text-2xl font-bold text-[var(--color-secondary)]">₹${item.price}</span>
                         <div class="flex items-center space-x-2">
-                            <button class="add-to-cart-btn bg-yellow-500 hover:bg-yellow-600 text-white text-base font-semibold px-6 py-3 rounded-lg shadow-md transition-colors ${inCart ? 'hidden' : ''}">
+                            <button class="add-to-cart-btn bg-[var(--color-secondary)] hover:bg-[#d49905] text-[var(--color-primary)] text-base font-semibold px-6 py-3 rounded-lg shadow-md transition-colors ${inCart ? 'hidden' : ''}">
                                 Add to Cart
                             </button>
                             <div class="quantity-control-group flex items-center space-x-2 ${inCart ? '' : 'hidden'}">
-                                <button class="adjust-quantity-btn w-8 h-8 rounded-full flex items-center justify-center bg-gray-200 hover:bg-gray-300 text-gray-600 font-bold text-lg" data-action="decrease">-</button>
-                                <span class="quantity-display font-bold text-gray-800 w-6 text-center text-lg">${quantity}</span>
-                                <button class="adjust-quantity-btn w-8 h-8 rounded-full flex items-center justify-center bg-gray-200 hover:bg-gray-300 text-gray-600 font-bold text-lg" data-action="increase">+</button>
+                                <button class="adjust-quantity-btn w-8 h-8 rounded-full flex items-center justify-center bg-[var(--color-border)] hover:bg-[#5a5a5a] text-[var(--color-text)] font-bold text-lg" data-action="decrease">-</button>
+                                <span class="quantity-display font-bold text-[var(--color-text)] w-6 text-center text-lg">${quantity}</span>
+                                <button class="adjust-quantity-btn w-8 h-8 rounded-full flex items-center justify-center bg-[var(--color-border)] hover:bg-[#5a5a5a] text-[var(--color-text)] font-bold text-lg" data-action="increase">+</button>
                             </div>
                         </div>
                     </div>
@@ -504,12 +556,19 @@
             const menuContainer = document.getElementById('menu-container');
             menuContainer.innerHTML = '';
             for (const category in menuItems) {
-                const categorySection = document.createElement('section');
+                const categorySection = document.createElement('div');
                 categorySection.className = 'w-full';
                 categorySection.innerHTML = `
-                    <h2 class="text-3xl font-bold text-gray-900 mb-6">${category.toUpperCase()}</h2>
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="${category.toLowerCase().replace(/\s/g, '-')}-menu">
-                        ${menuItems[category].map(createMenuItem).join('')}
+                    <div class="category-header cursor-pointer flex justify-between items-center transition-colors hover:text-[#d49905]" data-category="${category}">
+                        <h2 class="text-3xl font-bold mb-0">${category.toUpperCase()}</h2>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-[var(--color-secondary)] transition-transform duration-300 transform rotate-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </div>
+                    <div class="collapsible-section collapsed mt-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="${category.toLowerCase().replace(/\s/g, '-')}-menu">
+                            ${menuItems[category].map(createMenuItem).join('')}
+                        </div>
                     </div>
                 `;
                 menuContainer.appendChild(categorySection);
@@ -526,11 +585,11 @@
 
             if (cart.length === 0) {
                 cartItemsContainer.innerHTML = `
-                    <div class="flex flex-col items-center justify-center p-4 text-center text-gray-500 rounded-lg">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-10 h-10 mb-2 text-gray-400">
+                    <div class="flex flex-col items-center justify-center p-4 text-center text-[var(--color-border)] rounded-lg">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-10 h-10 mb-2 text-[var(--color-border)]">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 1 1-6 0 3 3 0 0 1 6 0ZM21 17.25a3 3 0 1 1-6 0 3 3 0 0 1 6 0ZM15.75 12.75h2.25a.75.75 0 0 0 .75-.75V8.25a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v.584m10.165 3.526-.855.992-.477.553a1.5 1.5 0 0 1-.796.44l-2.484.578a1.5 1.5 0 0 1-1.391-.29l-.213-.178m10.165-3.526a1.5 1.5 0 0 1 2.235 1.834L19 12.5M10.165 9.75h.008V9.75h-.008Z" />
                         </svg>
-                        <p class="text-sm font-medium">Your cart is empty.</p>
+                        <p class="text-sm font-light">Your cart is empty.</p>
                     </div>
                 `;
                 document.getElementById('checkout-btn').disabled = true;
@@ -542,15 +601,15 @@
                 cart.forEach(item => {
                     total += item.price * item.quantity;
                     const cartItem = document.createElement('div');
-                    cartItem.className = 'flex justify-between items-center bg-gray-50 p-2 rounded-xl shadow-sm border border-gray-200';
+                    cartItem.className = 'flex justify-between items-center bg-[var(--color-background)] p-2 rounded-xl shadow-sm border border-[var(--color-border)]';
                     cartItem.innerHTML = `
                         <div class="flex items-center space-x-2">
-                            <span class="font-normal text-gray-800 text-sm">${item.name}</span>
+                            <span class="font-light text-[var(--color-text)] text-sm">${item.name}</span>
                         </div>
                         <div class="flex items-center space-x-1" data-id="${item.id}">
-                            <button class="adjust-quantity-btn bg-gray-200 hover:bg-gray-300 text-gray-600 font-bold w-6 h-6 rounded-full flex items-center justify-center text-sm" data-action="decrease">-</button>
-                            <span class="font-bold text-gray-800 text-sm w-4 text-center">${item.quantity}</span>
-                            <button class="adjust-quantity-btn bg-gray-200 hover:bg-gray-300 text-gray-600 font-bold w-6 h-6 rounded-full flex items-center justify-center text-sm" data-action="increase">+</button>
+                            <button class="adjust-quantity-btn bg-[var(--color-border)] hover:bg-[#5a5a5a] text-[var(--color-text)] font-bold w-6 h-6 rounded-full flex items-center justify-center text-sm" data-action="decrease">-</button>
+                            <span class="font-bold text-[var(--color-text)] text-sm w-4 text-center">${item.quantity}</span>
+                            <button class="adjust-quantity-btn bg-[var(--color-border)] hover:bg-[#5a5a5a] text-[var(--color-text)] font-bold w-6 h-6 rounded-full flex items-center justify-center text-sm" data-action="increase">+</button>
                             <button class="remove-from-cart-btn text-red-500 font-normal text-xs hover:text-red-600 transition-colors ml-2" data-id="${item.id}">
                                 Remove
                             </button>
@@ -561,6 +620,7 @@
             }
 
             cartTotalElement.textContent = `₹${total.toFixed(2)}`;
+            setMenuSpacing(); // Call this after updating the cart to adjust spacing
         };
 
         // Function to show the modal
@@ -604,7 +664,7 @@
                 const itemSubtotal = item.price * item.quantity;
                 subtotal += itemSubtotal;
                 const summaryItem = document.createElement('div');
-                summaryItem.className = 'flex justify-between text-gray-700 font-medium py-2';
+                summaryItem.className = 'flex justify-between text-[var(--color-text)] font-light py-2';
                 summaryItem.innerHTML = `
                     <span>${item.name} (x${item.quantity})</span>
                     <span>₹${itemSubtotal}</span>
@@ -612,38 +672,27 @@
                 summaryItemsContainer.appendChild(summaryItem);
             });
 
-            // Calculate charges and discounts based on the new logic
+            // No discounts are applied here, as requested by the user.
             let finalTotal = subtotal;
             let deliveryCharge = 0;
-            let discount = 0;
 
             if (orderType === 'DELIVERY') {
                 if (subtotal < 300) {
                     deliveryCharge = 20;
                 }
                 finalTotal += deliveryCharge;
-            } else if (orderType === 'DINE-IN') {
-                if (subtotal >= 300) {
-                    discount = subtotal * 0.05;
-                }
-                finalTotal -= discount;
             }
 
             const subtotalItem = document.createElement('div');
-            subtotalItem.className = 'order-detail-item text-gray-700';
+            subtotalItem.className = 'order-detail-item text-[var(--color-text)]';
             subtotalItem.innerHTML = `<span>Subtotal:</span><span>₹${subtotal.toFixed(2)}</span>`;
             summaryDetails.appendChild(subtotalItem);
 
             if (orderType === 'DELIVERY') {
                 const deliveryItem = document.createElement('div');
-                deliveryItem.className = 'order-detail-item text-gray-700';
+                deliveryItem.className = 'order-detail-item text-[var(--color-text)]';
                 deliveryItem.innerHTML = `<span>Delivery Charges:</span><span class="${deliveryCharge === 0 ? 'text-green-600 font-bold' : 'text-red-600 font-bold'}">₹${deliveryCharge.toFixed(2)}</span>`;
                 summaryDetails.appendChild(deliveryItem);
-            } else if (orderType === 'DINE-IN') {
-                const discountItem = document.createElement('div');
-                discountItem.className = 'order-detail-item text-gray-700';
-                discountItem.innerHTML = `<span>Discount (5%):</span><span class="text-green-600 font-bold">-₹${discount.toFixed(2)}</span>`;
-                summaryDetails.appendChild(discountItem);
             }
 
             summaryTotalElement.textContent = `₹${finalTotal.toFixed(2)}`;
@@ -655,7 +704,7 @@
                 subtotal,
                 finalTotal,
                 deliveryCharge,
-                discount
+                discount: 0 // Discount is always zero now
             };
         };
 
@@ -774,9 +823,6 @@
             if (lastOrder.orderType === 'DELIVERY') {
                 doc.text(`Delivery Charges:`, pageWidth - 60, y, { align: 'right' });
                 doc.text(`+₹${lastOrder.deliveryCharge.toFixed(2)}`, pageWidth - margin, y, { align: 'right' });
-            } else if (lastOrder.orderType === 'DINE-IN' && lastOrder.discount > 0) {
-                doc.text(`Discount:`, pageWidth - 60, y, { align: 'right' });
-                doc.text(`-₹${lastOrder.discount.toFixed(2)}`, pageWidth - margin, y, { align: 'right' });
             }
             y += 10;
             
@@ -914,12 +960,33 @@
             // Go back to the order summary
             showModal('order-summary');
         });
+        
+        // Event listener to toggle menu sections
+        document.getElementById('menu-container').addEventListener('click', (e) => {
+            const header = e.target.closest('.category-header');
+            if (header) {
+                const section = header.nextElementSibling;
+                const svg = header.querySelector('svg');
+
+                if (section.classList.contains('collapsed')) {
+                    section.classList.remove('collapsed');
+                    svg.classList.remove('rotate-90');
+                } else {
+                    section.classList.add('collapsed');
+                    svg.classList.add('rotate-90');
+                }
+            }
+        });
 
         // Initial render on page load
         document.addEventListener('DOMContentLoaded', () => {
             renderMenu();
             renderCart();
+            setMenuSpacing();
         });
+
+        // Re-calculate spacing on window resize
+        window.onresize = setMenuSpacing;
     </script>
 </body>
 </html>
